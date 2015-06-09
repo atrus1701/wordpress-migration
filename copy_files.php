@@ -91,9 +91,9 @@ function copy_wp_folder()
 	echo "\nCopying WordPress files.\n";
 	
 	$exclude_files = '--exclude=.git --exclude=error_log';
-	if( $copy_all )
+	if( !$copy_all )
 	{
-		$exclude_files .= ' --exclude=wp-contents/blog.dir --exclude=wp-contents/uploads';
+		$exclude_files .= ' --exclude=wp-contents/blogs.dir --exclude=wp-contents/uploads';
 	}
 	
 	passthru( "rsync -azP $exclude_files '$remote_username@$remote_server:$remote_wp_path/'  $wp_path" );
