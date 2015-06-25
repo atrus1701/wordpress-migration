@@ -90,7 +90,7 @@ function copy_wp_folder()
 	// Copy files from remote location
 	echo "\nCopying WordPress files.\n";
 	
-	$exclude_files = '--exclude=.git --exclude=error_log';
+	$exclude_files = '--exclude wp-config.php --exclude=.git --exclude=error_log';
 	if( !$copy_all )
 	{
 		$exclude_files .= ' --exclude=wp-content/blogs.dir --exclude=wp-content/uploads';
