@@ -18,21 +18,21 @@ $config = array(
 	'dbpassword' 		=> '',
 	'dbname'			=> '',
 	
-	// Path to folder to transfer dump files to on local server.
+	// Full path to folder to transfer dump files to on local server.
 	'dump_path'			=> '',
 	
 	// WordPress domain and path of local WordPress install.
 	'domain'			=> '',
 	'path'				=> '',
 	
-	// SSL settings for origin server.
+	// SSL settings for the server for the WP install that is being duplicated.
 	'remote_server' 	=> '',
 	'remote_username' 	=> '',
 	
-	// Path to folder to transfer dump files from on origin server.
+	// Full path of the folder to copy dump files from on the remote server.
 	'remote_dump_path'	=> '',
 	
-	// WordPress domain and path of origin WordPress install.
+	// WordPress domain and path of WordPress install being duplicated.
 	'remote_domain'		=> '',
 	'remote_path'		=> '',
 	
@@ -40,17 +40,20 @@ $config = array(
 	'delimiter'			=> "\n",
 	
 	// Max number of rows to process at once when find and replacing.
-	// Decrease this number if "Allowed memory size" errors occur.
+	// Try decreasing this number if "Allowed memory size" errors occur.
 	'select_limit'		=> 100,
 
 	// Find and replace values.
 	// The key is the find and value is the replace.
 	'find_replace'		=> array(
 
-		// '//old_domain/old_path'	=> '//new_domain/new_path',
-		// '/old/public/html/path'	=> '/new/public/html/path',
+		// remote domain/path to local domain/path
+		// '//_remote_domain_and_path_' => '//_local_domain_and_path_',
+		
+		// remote WordPress folder path to local WordPress folder path
+		// '_remote_wordpress_directory_full_path_' => '_local_wordpress_directory_full_path_',
 
-	),	
+	),
 );
 
 

@@ -11,14 +11,14 @@
 // Empty strings are expected to be filled by the time verify_config_values is called.
 $config = array(
 	
-	// Path to the local public_html or WordPress install folder.
+	// Full path to the local WordPress install folder.
 	'wp_path'			=> '',
 	
-	// SSL settings for origin server.
+	// SSL settings for the server for the WP install that is being duplicated.
 	'remote_server' 	=> '',
 	'remote_username' 	=> '',
 	
-	// Path to the remote public_html or WordPress install folder.
+	// Full path to the remote WordPress install folder.
 	'remote_wp_path'	=> '',
 	
 	// Empty local folder before copying remote folder.

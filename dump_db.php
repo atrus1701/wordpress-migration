@@ -17,7 +17,7 @@ $config = array(
 	'dbpassword' 		=> '',
 	'dbname'			=> '',
 	
-	// Path to folder to transfer dump files to on local server.
+	// Full path to folder to transfer dump files to on local server.
 	'dump_path'			=> '',
 	
 	// Delimiter used to parse out SQL statements in the dump files.
