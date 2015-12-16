@@ -27,29 +27,18 @@ $config = array(
 	// Copy all folders including the very large blogs.dir and uploads
 	'copy_all'			=> false,
 	
+	// The full path to the folder that contains WinSCP.com file.
+	'winscp_folder'		=> '',
+
+	// The relative or full path to config data.
+	'config'			=> 'config_copy_files.php',
+
+	// The relative or full path to the log file.
+	'log'				=> '',
 );
 
 
-// Include general config data.
-if( file_exists(dirname(__FILE__).'/config.php') )
-	require_once( dirname(__FILE__).'/config.php' );
 
-// Include the custom config data for the copy_files script.
-if( file_exists(dirname(__FILE__).'/config_copy_files.php') )
-	require_once( dirname(__FILE__).'/config_copy_files.php' );
-
-
-// Include the required functions.
-require_once( dirname(__FILE__).'/functions.php' );
-
-
-// Process args and verify config values.
-process_args( array('clean_copy', 'copy_all') );
-verify_config_values();
-
-
-// Extract config into individual global variables.
-extract($config);
 
 
 /**
@@ -104,5 +93,33 @@ endif;
 //========================================================================================
 //============================================================================= MAIN =====
 
+// Include the required functions.
+require_once( __DIR__.'/functions.php' );
+
+
+print_header( 'Copying files started' );
+
+
+// Process args.
+process_args();
+
+
+// Include the custom config data.
+$args_config = $config;
+if( !empty($config['config']) && file_exists($config['config']) )
+	require_once( $config['config'] );
+merge_config( $config, $args_config );
+
+
+// Verify that all the config values are valid.
+verify_config_values( array('winscp_folder') );
+
+
+// Extract config into individual global variables.
+extract($config);
+
+
 main();
 
+
+print_header( 'Copying files ended' );

@@ -26,38 +26,13 @@ $config = array(
 	// Max number of rows to process at once when find and replacing.
 	// Decrease this number if "Allowed memory size" errors occur.
 	'select_limit'		=> 100,
-	
+
+	// The relative or full path to config data.
+	'config'			=> 'config_dump_db.php',
+
+	// The relative or full path to the log file.
+	'log'				=> '',
 );
-
-
-// Include general config data.
-if( file_exists(dirname(__FILE__).'/config.php') )
-	require_once( dirname(__FILE__).'/config.php' );
-
-// Include the custom config data for the dump_db script.
-if( file_exists(dirname(__FILE__).'/config_dump_db.php') )
-	require_once( dirname(__FILE__).'/config_dump_db.php' );
-
-
-// Include the required functions.
-require_once( dirname(__FILE__).'/functions.php' );
-
-
-// Process args and verify config values.
-process_args();
-verify_config_values();
-if( !is_int($config['select_limit']) )
-	die( "The select_limit must be integer.\n\n" );
-if( intval($config['select_limit']) <= 0 )
-	die( "The select_limit be a positive integer greater than zero.\n\n" );
-$config['select_limit'] = intval( $config['select_limit'] );
-
-// var_dump($config);
-// exit();
-
-
-// Extract config into individual global variables.
-extract($config);
 
 
 /**
@@ -301,5 +276,38 @@ endif;
 //========================================================================================
 //============================================================================= MAIN =====
 
+// Include the required functions.
+require_once( __DIR__.'/functions.php' );
+
+
+print_header( 'Dumping database started' );
+
+
+// Process args.
+process_args();
+
+
+// Include the custom config data.
+$args_config = $config;
+if( !empty($config['config']) && file_exists($config['config']) )
+	require_once( $config['config'] );
+merge_config( $config, $args_config );
+
+
+// Verify that all the config values are valid.
+verify_config_values();
+if( !is_numeric($config['select_limit']) )
+	script_die( 'The select_limit must be integer.' );
+if( intval($config['select_limit']) <= 0 )
+	script_die( 'The select_limit must be a positive integer greater than zero.' );
+$config['select_limit'] = intval( $config['select_limit'] );
+
+
+// Extract config into individual global variables.
+extract($config);
+
+
 main();
 
+
+print_header( 'Dumping database ended' );

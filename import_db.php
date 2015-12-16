@@ -21,10 +21,6 @@ $config = array(
 	// Full path to folder to transfer dump files to on local server.
 	'dump_path'			=> '',
 	
-	// WordPress domain and path of local WordPress install.
-	'domain'			=> '',
-	'path'				=> '',
-	
 	// SSL settings for the server for the WP install that is being duplicated.
 	'remote_server' 	=> '',
 	'remote_username' 	=> '',
@@ -32,56 +28,44 @@ $config = array(
 	// Full path of the folder to copy dump files from on the remote server.
 	'remote_dump_path'	=> '',
 	
-	// WordPress domain and path of WordPress install being duplicated.
-	'remote_domain'		=> '',
-	'remote_path'		=> '',
+	// WordPress table prefix.
+	'wp_prefix'			=> 'wp_',	
 	
 	// Delimiter used to parse out SQL statements in the dump files.
 	'delimiter'			=> "\n",
-	
+
 	// Max number of rows to process at once when find and replacing.
 	// Try decreasing this number if "Allowed memory size" errors occur.
 	'select_limit'		=> 100,
+
+	// Changes to the domain and path from remote server to local install.
+	// These values will also be used in the find and replace section.
+	'domain_changes'	=> array(
+
+		// 'remote_domain/path' 	=>  'local_domain/path',
+
+	),
 
 	// Find and replace values.
 	// The key is the find and value is the replace.
 	'find_replace'		=> array(
 
-		// remote domain/path to local domain/path
-		// '//_remote_domain_and_path_' => '//_local_domain_and_path_',
-		
 		// remote WordPress folder path to local WordPress folder path
 		// '_remote_wordpress_directory_full_path_' => '_local_wordpress_directory_full_path_',
 
 	),
+	
+	// The full path to the folder that contains WinSCP.com file.
+	'winscp_folder'		=> '',
+
+	// The relative or full path to the config file.
+	'config'			=> 'config_import_db.php',
+
+	// The relative or full path to the log file.
+	'log'				=> '',
 );
 
 
-// Include general config data.
-if( file_exists(dirname(__FILE__).'/config.php') )
-	require_once( dirname(__FILE__).'/config.php' );
-
-// Include the custom config data for the import_db script.
-if( file_exists(dirname(__FILE__).'/config_import_db.php') )
-	require_once( dirname(__FILE__).'/config_import_db.php' );
-
-
-// Include the required functions.
-require_once( dirname(__FILE__).'/functions.php' );
-
-
-// Process args and verify config values.
-process_args();
-verify_config_values();
-if( !is_int($config['select_limit']) )
-	die( "The select_limit must be integer.\n\n" );
-if( intval($config['select_limit']) <= 0 )
-	die( "The select_limit be a positive integer greater than zero.\n\n" );
-$config['select_limit'] = intval( $config['select_limit'] );
-
-
-// Parse find_replace values, if necessary.
-if( is_string($config['find_replace']) )
 {
 	$find_replace = array();
 	
@@ -786,6 +770,94 @@ endif;
 
 //========================================================================================
 //============================================================================= MAIN =====
+
+// Include the required functions.
+require_once( __DIR__.'/functions.php' );
+
+
+print_header( 'Importing database started' );
+
+
+// Process args.
+process_args();
+
+
+// Include the custom config data.
+$args_config = $config;
+if( !empty($config['config']) && file_exists($config['config']) )
+	require_once( $config['config'] );
+merge_config( $config, $args_config );
+
+
+// Verify that all the config values are valid.
+verify_config_values(
+	array('winscp_folder'),
+	array('domain_changes', 'find_replace')
+);
+
+if( !is_numeric($config['select_limit']) )
+	script_die( 'The select_limit must be integer.' );
+if( intval($config['select_limit']) <= 0 )
+	script_die( 'The select_limit must be a positive integer greater than zero.' );
+$config['select_limit'] = intval( $config['select_limit'] );
+$config['winscp_folder'] = realpath($config['winscp_folder']);
+
+
+// Parse find_replace values.
+parse_config_values( 'find_replace', $config['find_replace'] );
+
+
+// Parse domain_changes values.
+parse_config_values( 'domain_changes', $config['domain_changes'] );
+$keys = array_keys( $config['domain_changes'] );
+foreach( $config['domain_changes'] as $find => $replace )
+{
+	unset( $config['domain_changes'][$find] );
+
+	$find = preg_replace( "/(https?:)?\/\//i", '', trim($find) );
+	$replace = preg_replace( "/(https?:)?\/\//i", '', trim($replace) );
+
+	$fpu = parse_url( 'http://'.$find );
+	$rpu = parse_url( 'http://'.$replace );
+
+	if( !$fpu )
+	{
+		script_die( 'Unable to parse url: '.$find );
+	}
+	
+	if( !$rpu )
+	{
+		script_die( 'Unable to parse url: '.$replace );
+	}
+
+	if( !isset($fpu['path']) )
+		$fpu['path'] = '';
+	elseif( substr($fpu['path'], -1) === '/' )
+		$fpu['path'] = substr( $fpu['path'], 0, strlen($fpu['path'])-1 );
+	
+	if( !isset($rpu['path']) )
+		$rpu['path'] = '';
+	elseif( substr($rpu['path'], -1) === '/' )
+		$rpu['path'] = substr( $rpu['path'], 0, strlen($rpu['path'])-1 );
+
+	$domain_change = array();
+	$domain_change['domain'] = array(
+		'find' => $fpu['host'],
+		'replace' => $rpu['host'],
+	);
+	$domain_change['path'] = array(
+		'find' => $fpu['path'].'/',
+		'replace' => $rpu['path'].'/',
+	);
+
+	$config['domain_changes'][] = $domain_change;
+	$config['find_replace']['//'.$fpu['host'].$fpu['path']] = '//'.$rpu['host'].$rpu['path'];
+}
+
+
+// Extract config into individual global variables.
+extract($config);
+
 
 main();
 
