@@ -115,7 +115,7 @@ function main()
 	clear_log();
 
 	clear_dump_folder();
- 	copy_remote_dump_folder();
+	copy_remote_dump_folder();
 	
 	sql_connect();
 	
@@ -300,7 +300,7 @@ endif;
  * Import data from the table's SQL file.
  * @param   string  $table_name  The name of the table to import.
  */
-if( !function_exists('') ):
+if( !function_exists('import_table_data') ):
 function import_table_data( $table_name )
 {
 	global $db_connection, $dump_path, $delimiter;
@@ -374,6 +374,8 @@ if( !function_exists('find_and_replace') ):
 function find_and_replace()
 {
 	global $db_connection, $dbname;
+	$timer = new Timer;
+	$timer->start();
 	
 	echo2( "\nFind and replacing the table data.\n" );
 	
@@ -418,7 +420,7 @@ endif;
 if( !function_exists('find_and_replace_table_data') ):
 function find_and_replace_table_data( $table_name )
 {
-	global $db_connection, $select_limit;
+	global $db_connection, $select_limit, $current_row;
 	
 	$primary_key = get_table_primary_key( $table_name );
 	
@@ -457,6 +459,11 @@ function find_and_replace_table_data( $table_name )
 				);
 				continue;
 			}
+
+			$current_row = array(
+				'id'	=> $d[$primary_key],
+				'data'	=> $d,
+			);
 			
 			$is_changed = false;
 			foreach( $d as $column_name => &$value )
@@ -467,7 +474,8 @@ function find_and_replace_table_data( $table_name )
 				find_and_replace_column( $table_name, $d[$primary_key], $column_name, $value, $is_changed );
 			}
 		
-			if( $is_changed ) update_row( $table_name, $primary_key, $d );
+			if( $is_changed )
+				update_row( $table_name, $primary_key, $d );
 		}
 	}
 }
@@ -502,10 +510,10 @@ endif;
  * @param   string  $is_changed   Set to true if the value is changed, indicating an 
  *                                update is needed.
  */
-if( !function_exists('') ):
+if( !function_exists('find_and_replace_column') ):
 function find_and_replace_column( $table_name, $row_id, $column_name, &$value, &$is_changed )
 {
-	global $domain, $path, $remote_domain, $remote_path;
+	global $wp_prefix, $domain_changes, $current_row;
 	
 	switch( $table_name )
 	{
@@ -549,25 +557,7 @@ function find_and_replace_column( $table_name, $row_id, $column_name, &$value, &
 			}
 			break;
 	}
-	
-	switch( $column_name )
-	{
-		case 'domain':
-			if( $domain != $remote_domain )
-			{
-				$is_changed = true;
-				$value = str_replace_first( $remote_domain, $domain, $value );
-			}
-			break;
-		case 'path':
-			if( $path != $remote_path )
-			{
-				$is_changed = true;
-				$value = str_replace_first( $remote_path, $path, $value );
-			}
-			break;
-	}
-	
+
 	find_and_replace_value( $table_name, $row_id, $column_name, $value, $is_changed );
 }
 endif;
