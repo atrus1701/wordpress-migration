@@ -46,5 +46,8 @@ $config = array(
 		'_remote_wordpress_directory_full_path_' => '_local_wordpress_directory_full_path_',
 
 	),
+
+	// The relative or full path to the log file.
+	'log'				=> '',
 );
 

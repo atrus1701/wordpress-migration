@@ -19,6 +19,8 @@ $config = array(
 	
 	// Copy all folders including the very large blogs.dir and uploads
 	'copy_all'			=> false,
-	
+
+	// The relative or full path to the log file.
+	'log'				=> '',
 );
 

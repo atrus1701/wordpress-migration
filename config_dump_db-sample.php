@@ -20,5 +20,7 @@ $config = array(
 	// Decrease this number if "Allowed memory size" errors occur.
 	'select_limit'		=> 100,
 	
+	// The relative or full path to the log file.
+	'log'				=> '',
 );
 
