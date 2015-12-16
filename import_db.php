@@ -517,41 +517,44 @@ function find_and_replace_column( $table_name, $row_id, $column_name, &$value, &
 	
 	switch( $table_name )
 	{
-		case 'wp_site':
+		case $wp_prefix.'site':
+		case $wp_prefix.'blogs':
 			switch( $column_name )
 			{
 				case 'domain':
-					if( $domain != $remote_domain )
+					foreach( $domain_changes as $domain_change )
 					{
-						$is_changed = true;
-						$value = $domain;
+						if( $value == $domain_change['domain']['find'] )
+						{
+							$is_changed = true;
+							$value = $domain_change['domain']['replace'];
+						}
 					}
 					return;
 				case 'path':
-					if( $path != $remote_path )
+					foreach( $domain_changes as $domain_change )
 					{
-						$is_changed = true;
-						$value = $path;
-					}
-					return;
-			}
-			break;
-		
-		case 'wp_blogs':
-			switch( $column_name )
-			{
-				case 'domain':
-					if( $domain != $remote_domain )
-					{
-						$is_changed = true;
-						$value = $domain;
-					}
-					return;
-				case 'path':
-					if( $path != $remote_path )
-					{
-						$is_changed = true;
-						$value = str_replace_first( $remote_path, $path, $value );
+						if( $current_row['data']['domain'] == $domain_change['domain']['find'] )
+						{
+							if( $domain_change['path']['find'] == $domain_change['path']['replace'] )
+								continue;
+							
+							if( $table_name == $wp_prefix.'site' && 
+								$value == $domain_change['path']['find'] )
+							{
+								$is_changed = true;
+								$value = $domain_change['path']['replace'];
+							}
+							elseif( $table_name == $wp_prefix.'blogs')
+							{
+								$is_changed = true;
+								$value = str_replace_first(
+									$domain_change['path']['find'],
+									$domain_change['path']['replace'],
+									$value
+								);
+							}
+						}
 					}
 					return;
 			}
