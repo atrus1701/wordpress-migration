@@ -46,6 +46,8 @@ $config = array(
  */
 function main()
 {
+	clear_log();
+	
 	clear_wp_folder();
  	copy_wp_folder();
 }
@@ -62,7 +64,7 @@ function clear_wp_folder()
 	if( !$clean_copy ) return;
 	
 	// Clear files from public_html
-	echo "\nClearing files from WordPress install path.\n";
+	echo2( "\nClearing files from WordPress install path.\n" );
 	remove_directory( "$wp_path" );
 	exec( "mkdir $wp_path" );
 }
@@ -77,7 +79,7 @@ function copy_wp_folder()
 {
 	global $copy_all, $remote_username, $remote_server, $remote_wp_path, $wp_path;
 	// Copy files from remote location
-	echo "\nCopying WordPress files.\n";
+	echo2( "\nCopying WordPress files.\n" );
 	
 	$exclude_files = '--exclude wp-config.php --exclude=.git --exclude=error_log';
 	if( !$copy_all )

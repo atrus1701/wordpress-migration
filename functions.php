@@ -72,7 +72,7 @@ function sql_connect()
 	if( $db_connection ) return;
 	
 	// Create connection
-	echo "\nConnecting to the database.\n";
+	echo2( "\nConnecting to the database.\n" );
 	try
 	{
 		$db_connection = new PDO( "mysql:host=$dbhost;dbname=$dbname;charset=utf8", $dbusername, $dbpassword );
@@ -81,7 +81,7 @@ function sql_connect()
 	catch( PDOException $e )
 	{
 		$db_connection = null;
-		die( "Unable to connect to the database:\n".$e->getMessage()."\n\n" );
+		script_die( 'Unable to connect to the database.', $e->getMessage() );
 	}
 }
 endif;
@@ -99,11 +99,13 @@ function sql_close()
 endif;
 
 
+/**
+ * Add an error by getting all function args and storing in the errors list.
+ */
 if( !function_exists('add_error') ):
 function add_error()
 {
 	global $errors;
-	
 	$errors[] = func_get_args();
 }
 endif;
@@ -116,18 +118,30 @@ function print_errors()
 	
 	if( count($errors) == 0 )
 	{
-		echo "\nNo errors were logged.\n\n";
+		echo2( "\n.No errors were logged.\n\n" );
 		return;
 	}
 	
-	echo "\n".count($errors)." errors were logged.\n\n";
+	echo2( "\n".count($errors)." errors were logged.\n\n" );
 	
 	foreach( $errors as $error )
 	{
-		echo implode( ' : ', $error )."\n";
+		echo2( implode( ' : ', $error )."\n" );
 	}
 	
-	echo "\n\n";
+	echo2( "\n\n" );
+}
+endif;
+
+
+/**
+ * End the script by printing the error message that is passed in the function args.
+ */
+if( !function_exists('script_die') ):
+function script_die()
+{
+	echo2( "\n\nERROR:\n".implode( "\n", func_get_args() )."\n\n" );
+	die();
 }
 endif;
 
@@ -266,7 +280,101 @@ function is_serialized( $data, $strict = true )
 endif;
 
 
+/**
+ * Simple timer class to keep track of how long each section is taking.
+ */
+if( !class_exists('Timer') ):
+class Timer
+{
+	private $start_time = null;
+	public function __construct() {}
+	public function start() { $this->start_time = time(); }
+    public function get_elapsed_time() { return time() - $this->start_time; }
+}
+endif;
 
 
+/**
+ * Clear the log file, if one is specified.
+ */
+if( !function_exists('clear_log') ):
+function clear_log()
+{
+	global $log;
+	if( $log ) file_put_contents( $log, '' );
+}
+endif;
 
+
+/**
+ * Echo text to the screen and a log file, if one is specified.
+ * @param   string  $text  The text to display.
+ */
+if( !function_exists('echo2') ):
+function echo2( $text )
+{
+	global $log;
+	echo $text;
+	if( $log ) file_put_contents( $log, $text, FILE_APPEND );
+}
+endif;
+
+
+/**
+ * Prints the header and footer for the script output.
+ * @param  string  $text  The action text, for example: Copying files started.
+ */
+if( !function_exists('print_header') ):
+function print_header( $text )
+{
+	echo2( "\n\n" );
+	echo2( "==========================================================================================\n" );
+	echo2( $text.' on '.date( 'F j, Y h:i:s A' )."\n" );
+	echo2( "==========================================================================================\n" );
+	echo2( "\n\n" );
+}
+endif;
+
+
+/**
+ * Creates a time string to display the seconds in readable manner.
+ * @param   int     $seconds  The seconds to convert into hours, minutes, and seconds format.
+ * @return  string  The formatted time string.
+ */
+if( !function_exists('get_time_string') ):
+function get_time_string( $seconds )
+{
+	$time = array(
+		'hours'   => 0,
+		'minutes' => 0,
+		'seconds' => 0,
+	);
+	
+	$minutes = $seconds / 60;
+	$hours = $minutes / 60;
+
+	if( $hours > 0 )
+	{
+		$time['seconds'] = $seconds - ($minutes * 60);
+		$time['minutes'] = $minutes - ($hours * 60);
+		$time['hours']   = $hours;
+	}
+	elseif( $minutes > 0 )
+	{
+		$time['seconds'] = $seconds - ($minutes * 60);
+		$time['minutes'] = $minutes;
+	}
+	else
+	{
+		$time['seconds'] = $seconds;
+	}
+
+	foreach( $time as $key => &$value )
+	{
+		$value .= " $key";
+	}
+
+	return implode( ' ', $times );
+}
+endif;
 

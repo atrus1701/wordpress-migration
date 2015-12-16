@@ -40,6 +40,8 @@ $config = array(
  */
 function main()
 {
+	clear_log();
+
 	clear_dump_folder();
 	
 	sql_connect();
@@ -60,11 +62,11 @@ function clear_dump_folder()
 	global $dump_path;
 	
 	// Create dump directory
-	echo "\nCreating dump directory.\n";
+	echo2( "\nCreating dump directory.\n" );
 	if( !is_dir($dump_path) )
 	{
 		if( !mkdir($dump_path) )
-			die( "Unable to create dump folder.\n\n" );
+			script_die( 'Unable to create dump folder.' );
 	}
 
 	// Clear out dump directory
@@ -82,10 +84,10 @@ function dump_database_structure()
 {
 	global $db_connection, $dbname;
 	
-	echo "\nDumping database's table structure...\n\n";
+	echo2( "\nDumping database's table structure...\n\n" );
 	
 	if( !$db_connection )
-		die( "Must connect to database before generating the table structure.\n" );
+		script_die( 'Must connect to database before generating the table structure.' );
 	
 	try
 	{
@@ -93,7 +95,7 @@ function dump_database_structure()
 	}
 	catch( PDOException $e )
 	{
-		die( "Unable to retrieve database table list.\n".$e->getMessage()."\n\n" );
+		script_die( 'Unable to retrieve database table list.', $e->getMessage() );
 	}
 	
 	$key = 'Tables_in_'.$dbname;
@@ -106,7 +108,7 @@ function dump_database_structure()
 		$table_name = $table[ $key ];
 		
 		$n = str_pad( $current_table_count, strlen(''.$total_tables), '0', STR_PAD_LEFT );
-		echo "Dumping table structure [$n of $total_tables] $table_name\n";
+		echo2( "Dumping table structure [$n of $total_tables] $table_name\n" );
 		
 		dump_table_structure( $table_name );
 		$current_table_count++;
@@ -132,12 +134,12 @@ function dump_table_structure( $table_name )
 	}
 	catch( PDOException $e )
 	{
-		die( "Unable to retrieve create table data for '$table_name'.\n".$e->getMessage()."\n\n" );
+		script_die( 'Unable to retrieve create table data for "'.$table_name.'".', $e->getMessage() );
 	}
 	
 	if( count($create_table) == 0 )
 	{
-		die( "Unable to retrieve create table data for '$table_name'.\n\n" );
+		script_die( 'Unable to retrieve create table data for "'.$table_name.'".' );
 	}
 	
 	$create_table_sql = $create_table->fetchColumn(1);
@@ -158,10 +160,10 @@ function dump_database_data()
 {
 	global $db_connection, $dbname;
 	
-	echo "\nDumping database's table data.\n";
+	echo2( "\nDumping database's table data.\n" );
 	
 	if( !$db_connection )
-		die( "Must connect to database before generating the table structure.\n" );
+		script_die( 'Must connect to database before generating the table structure.' );
 	
 	// Get table listing
 	try
@@ -170,7 +172,7 @@ function dump_database_data()
 	}
 	catch( PDOException $e )
 	{
-		die( "Unable to retrieve database table list.\n".$e->getMessage()."\n\n" );
+		script_die( 'Unable to retrieve database table list.', $e->getMessage() );
 	}
 	
 	$key = 'Tables_in_'.$dbname;
@@ -183,7 +185,7 @@ function dump_database_data()
 		$table_name = $table[ $key ];
 
 		$n = str_pad( $current_table_count, strlen(''.$total_tables), '0', STR_PAD_LEFT );
-		echo "Dumping table data [$n of $total_tables] $table_name\n";
+		echo2( "Dumping table data [$n of $total_tables] $table_name\n" );
 
 		dump_table_data( $table_name );
 		$current_table_count++;
@@ -211,7 +213,7 @@ function dump_table_data( $table_name )
 	}
 	catch( PDOException $e )
 	{
-		die( "Unable to retrieve the row count for table '$table_name'.\n".$e->getMessage()."\n\n" );
+		script_die( 'Unable to retrieve the row count for table "'.$table_name.'".', $e->getMessage() );
 	}
 	
 	// Get table data
@@ -224,7 +226,7 @@ function dump_table_data( $table_name )
 		}
 		catch( PDOException $e )
 		{
-			die( "Unable to retrieve content for table '$table_name'.\n".$e->getMessage()."\n\n" );
+			script_die( 'Unable to retrieve content for table "'.$table_name.'".', $e->getMessage() );
 		}
 	
 		// Process each row.

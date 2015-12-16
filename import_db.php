@@ -101,6 +101,8 @@ extract($config);
 if( !function_exists('main') ):
 function main()
 {
+	clear_log();
+
 	clear_dump_folder();
  	copy_remote_dump_folder();
 	
@@ -126,11 +128,11 @@ function clear_dump_folder()
 	global $dump_path;
 	
 	// Create dump directory
-	echo "\nCreating dump directory.\n";
+	echo2( "\nCreating dump directory.\n" );
 	if( !is_dir($dump_path) )
 	{
 		if( !mkdir($dump_path) )
-			die( "Unable to create dump folder.\n\n" );
+			script_die( 'Unable to create dump folder.' );
 	}
 
 	// Clear out dump directory
@@ -146,6 +148,8 @@ if( !function_exists('copy_remote_dump_folder') ):
 function copy_remote_dump_folder()
 {
 	global $remote_username, $remote_server, $remote_dump_path, $dump_path;
+	$timer = new Timer;
+	$timer->start();
 	
 	// Copy dump files from remote location
 	echo "\nCopying dump files.\n";
@@ -155,6 +159,7 @@ function copy_remote_dump_folder()
 	{
 		die( "Unable to copy dump files.\n\n" );
 	}
+	echo2( "\nCopying the dump files took {$timer->get_elapsed_time()} seconds.\n\n" );
 }
 endif;
 
@@ -166,11 +171,13 @@ if( !function_exists('drop_existing_tables') ):
 function drop_existing_tables()
 {
 	global $db_connection, $dbname, $total_tables, $current_table_count;
+	$timer = new Timer;
+	$timer->start();
 	
-	echo "\nDropping existing database tables.\n\n";
+	echo2( "\nDropping existing database tables.\n\n" );
 	
 	if( !$db_connection )
-		die( "Must connect to database before dropping the tables.\n" );
+		script_die( 'Must connect to database before dropping the tables.' );
 	
 	// Get table listing
 	try
@@ -179,7 +186,7 @@ function drop_existing_tables()
 	}
 	catch( PDOException $e )
 	{
-		die( "Unable to retrieve database table list.\n\n" );
+		script_die( 'Unable to retrieve database table list.' );
 	}
 	
 	$key = 'Tables_in_'.$dbname;
@@ -192,11 +199,13 @@ function drop_existing_tables()
 		$table_name = $table[ $key ];
 
 		$n = str_pad( $current_table_count, strlen(''.$total_tables), '0', STR_PAD_LEFT );
-		echo "Dropping table [$n of $total_tables] $table_name\n";
+		echo2( "Dropping table [$n of $total_tables] $table_name\n" );
 
 		drop_table( $table_name );
 		$current_table_count++;
 	}
+
+	echo2( "\nDropping the tables took {$timer->get_elapsed_time()} seconds.\n\n" );
 }
 endif;
 
@@ -216,7 +225,7 @@ function drop_table( $table_name )
 	}
 	catch( PDOException $e )
 	{
-		die( "Unable to drop table '$table_name'.\n".$e->getMessage()."\n\n" );
+		script_die( 'Unable to drop table "'.$table_name.'".', $e->getMessage() );
 	}
 }
 endif;
@@ -229,11 +238,13 @@ if( !function_exists('import_data') ):
 function import_data()
 {
 	global $db_connection, $dump_path;
+	$timer = new Timer;
+	$timer->start();
 	
-	echo "\nImporting table data.\n\n";
+	echo2( "\nImporting table data.\n\n" );
 
 	if( !$db_connection )
-		die( "Must connect to database before importing the table data.\n" );
+		script_die( 'Must connect to database before importing the table data.' );
 
 	// Import each table's data
 	$files = glob( "$dump_path/*.sql" );
@@ -244,11 +255,13 @@ function import_data()
 		$table_name = basename( $file, '.sql' );
 
 		$n = str_pad( $current_table_count, strlen(''.$total_tables), '0', STR_PAD_LEFT );
-		echo "Importing table [$n of $total_tables] $table_name\n";
+		echo2( "Importing table [$n of $total_tables] $table_name\n" );
 
 		import_table_data( $table_name );
 		$current_table_count++;
 	}
+
+	echo2( "\nImporting the table data took {$timer->get_elapsed_time()} seconds.\n\n" );
 }
 endif;
 
@@ -295,7 +308,7 @@ function import_table_data( $table_name )
 	}
 	catch( Exception $e )
 	{
-		die( "Error while processing the SQL file '$dump_file'.\n".$e->getMessage()."\n\n" );
+		script_die( 'Error while processing the SQL file "'.$dump_file.'".', $e->getMessage() );
 	}
 }
 endif;
@@ -318,7 +331,7 @@ function execute_query( $query )
 	}
 	catch( PDOException $e )
 	{
-		die( "Unable to excecute query '$query'.\n".$e->getMessage()."\n\n" );
+		script_die( 'Unable to excecute query "'.$query.'".', $e->getMessage() );
 	}
 }
 endif;
@@ -332,10 +345,10 @@ function find_and_replace()
 {
 	global $db_connection, $dbname;
 	
-	echo "\nFind and replacing the table data.\n";
+	echo2( "\nFind and replacing the table data.\n" );
 	
 	if( !$db_connection )
-		die( "Must connect to database before find and replacing in the tables.\n" );
+		script_die( 'Must connect to database before find and replacing in the tables.' );
 	
 	// Get table listing
 	try
@@ -344,7 +357,7 @@ function find_and_replace()
 	}
 	catch( PDOException $e )
 	{
-		die( "Unable to retrieve database table list.\n".$e->getMessage()."\n\n" );
+		script_die( 'Unable to retrieve database table list.', $e->getMessage() );
 	}
 	
 	$key = 'Tables_in_'.$dbname;
@@ -357,12 +370,13 @@ function find_and_replace()
 		$table_name = $table[ $key ];
 
 		$n = str_pad( $current_table_count, strlen(''.$total_tables), '0', STR_PAD_LEFT );
-		echo "Find and Replace [$n of $total_tables] $table_name\n";
+		echo2( "Find and Replace [$n of $total_tables] $table_name\n" );
 
 		find_and_replace_table_data( $table_name );
 		$current_table_count++;
 	}
-// 	$find_and_replace_table_data( 'wp_clas_uncc_signups' );
+
+	echo2( "\nPerforming the find and replace took {$timer->get_elapsed_time()} seconds.\n\n" );
 }
 endif;
 
@@ -386,7 +400,7 @@ function find_and_replace_table_data( $table_name )
 	}
 	catch( PDOException $e )
 	{
-		die( "Unable to retrieve the row count for table '$table_name'.\n".$e->getMessage()."\n\n" );
+		script_die( 'Unable to retrieve the row count for table "'.$table_name.'".', $e->getMessage() );
 	}
 	
 	// Get table data
@@ -398,7 +412,7 @@ function find_and_replace_table_data( $table_name )
 		}
 		catch( PDOException $e )
 		{
-			die( "Unable to retrieve content for table '$table_name'.\n".$e->getMessage()."\n\n" );
+			script_die( 'Unable to retrieve content for table "'.$table_name.'".', $e->getMessage() );
 		}
 	
 		// Process each row.
@@ -729,7 +743,12 @@ function update_row( $table_name, $primary_key, $row )
 	}
 	catch( PDOException $e )
 	{
-		die( "Unable to update row '$primary_field' for table '$table_name'.\n".$e->getMessage()."\n\n" );
+		add_error(
+			$table_name,
+			$e->getMessage(),
+			"\n".print_r($row, true)
+		);
+//		script_die( 'Unable to update row "'.$primary_field.'" for table "'.$table_name.'".', $e->getMessage() );
 	}
 }
 endif;
@@ -760,7 +779,7 @@ function get_table_primary_key( $table_name )
 	}
 	catch( PDOException $e )
 	{
-		die( "Unable to retrieve the primary key for table '$table_name'.\n".$e->getMessage()."\n\n" );
+		script_die( 'Unable to retrieve the primary key for table "'.$table_name.'".', $e->getMessage() );
 	}
 	
 	return $column_name;
@@ -861,3 +880,5 @@ extract($config);
 
 main();
 
+
+print_header( 'Importing database ended' );
