@@ -14,8 +14,6 @@ ini_set('memory_limit', '512M');
 
 $db_connection = null;
 $errors = array();
-$filters = array();
-$actions = array();
 
 
 /**
@@ -101,43 +99,6 @@ function sql_close()
 endif;
 
 
-if( !function_exists('do_action') ):
-function do_action( $name )
-{
-	global $actions;
-	
-	if( !array_key_exists($name, $actions) ) return;
-	
-	$args = func_get_args();
-	array_shift( $args );
-	
-	foreach( $actions[$name] as $callback )
-	{
-		
-	}
-}
-endif;
-
-
-if( !function_exists('apply_filters') ):	
-function apply_filters( $name, $value )
-{
-	global $filters;
-	
-	if( !array_key_exists($name, $filters) ) return;
-	
-	$args = func_get_args();
-	array_shift( $args );
-	array_shift( $args );
-	
-	foreach( $filters[$name] as $callback )
-	{
-		
-	}
-}
-endif;
-	
-	
 if( !function_exists('add_error') ):
 function add_error()
 {
