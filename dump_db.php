@@ -3,7 +3,7 @@
  * Dumps the current database to a series of SQL files in the dump folder.
  * 
  * @package    wordpress-migrate
- * @author     Crystal Barton <cbarto11@uncc.edu>
+ * @author     Crystal Barton <atrus1701@gmail.com>
  */
 
 

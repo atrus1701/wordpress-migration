@@ -3,7 +3,7 @@
  * Copies the public_html folder from a remote server to the local machine.
  * 
  * @package    wordpress-migrate
- * @author     Crystal Barton <cbarto11@uncc.edu>
+ * @author     Crystal Barton <atrus1701@gmail.com>
  */
 
 

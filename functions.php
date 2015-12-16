@@ -3,7 +3,7 @@
  * Common functions used in all WordPress Migration scripts.
  * 
  * @package    wordpress-migrate
- * @author     Crystal Barton <cbarto11@uncc.edu>
+ * @author     Crystal Barton <atrus1701@gmail.com>
  */
 
 
