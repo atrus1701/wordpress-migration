@@ -11,8 +11,10 @@
 // Increase this number if "Allowed memory size" errors occur.
 ini_set('memory_limit', '512M');
 
-
+// Database connection object.
 $db_connection = null;
+
+// A list of non-fatal errors that have occured.
 $errors = array();
 
 
@@ -105,17 +107,32 @@ function get_winscp_path()
 endif;
 
 
+/**
  * Verify that all config values have a value.
+ * @param   array  $can_be_empty  A list of config values that can be empty.
+ * @param   array  $is_array      A list of config values that should be an array.
  */
 if( !function_exists('verify_config_values') ):
-function verify_config_values()
+function verify_config_values( $can_be_empty = array(), $is_array = array() )
 {
 	global $config;
 	
-	foreach( $config as $key => $value )
+	foreach( $config as $key => &$value )
 	{
-		if( $value === null ) die( "The $key value is null.\n\n" );
-		if( $value === '' ) die( "The $key value is empty.\n\n" );
+		if( in_array($key, $is_array) )
+		{
+			if( is_array($value) ) continue;
+			$value = array( $value );
+			continue;
+		}
+
+		if( is_array($value) )
+			$value = $value[ count($value)-1 ];
+
+		if( in_array($key, $can_be_empty) ) continue;
+		
+		if( $value === null ) 	script_die( "The $key value is null." );
+		if( $value === '' ) 	script_die( "The $key value is empty." );
 	}
 }
 endif;
@@ -169,7 +186,10 @@ function add_error()
 }
 endif;
 	
-	
+
+/**
+ * Print all the errors stored in the errors list.
+ */	
 if( !function_exists('print_errors') ):
 function print_errors()
 {

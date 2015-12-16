@@ -66,33 +66,44 @@ $config = array(
 );
 
 
+/*
+ * Parses the find_replace and domain_changes values.  See below function for use.
+ * @param   string  $key     The config key.
+ * @param   array   $config  The array of values to parse.
+ */
+if( !function_exists('parse_config_values') ):
+function parse_config_values( $key, &$config )
 {
-	$find_replace = array();
-	
-	$fr_pairs = explode( ';', $config['find_replace'] );
-	foreach( $fr_pairs as &$fr_pair )
+	if( !is_array($config) ) $config = array( $config );
+
+	$keys = array_keys( $config );
+	for( $i = 0; $i < count($keys); $i++ )
 	{
-		if( $fr_pair == '' ) continue;
-		
-		$fr_pair = explode( '=>', $fr_pair );
-		if( count($fr_pair) < 2 ) continue;
-		
-		$fr_keys = explode( ',', $fr_pair[0] );
-		foreach( $fr_keys as $fr_key )
+		$key = $keys[$i];
+		if( is_int($key) )
 		{
-			$find_replace[trim($fr_key)] = trim($fr_pair[1]);
+			$value = $config[$key];
+			unset( $config[$key] );
+			
+			$parts = explode( '=>', $value );
+			if( count($parts) < 2 )
+			{
+				switch( $key )
+				{
+					case 'find_replace':
+						script_die( 'The find_replace argument needs to be the following format: --find_repalce="find => replace"' );
+						break;
+					case 'domain_changes':
+						script_die( 'The domain_changes argument needs to be the following format: --domain_changes="remote_domain/path => local_domain/path"' );
+						break;
+				}
+			}
+
+			$config[$parts[0]] = $parts[1];
 		}
 	}
-	
-	$config['find_replace'] = $find_replace;
 }
-
-// var_dump($config);
-// exit();
-
-
-// Extract config into individual global variables.
-extract($config);
+endif;
 
 
 /**
