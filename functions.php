@@ -46,6 +46,65 @@ endif;
 
 
 /**
+ * Merges two config arrays: the file config values and arguments config values.
+ * @param   array  $a  The file config values.
+ * @param   array  $b  The arguments config values.
+ */
+if( !function_exists('merge_config') ):
+function merge_config( &$a, &$b )
+{
+	foreach( $b as $k => $v )
+	{
+		if( (!array_key_exists($k, $a)) ||
+			(is_array($v) && count($v) > 0) ||
+			(is_string($v) && $v !== '') )
+		{
+			$a[$k] = $b[$k];
+		}
+	}
+}
+endif;
+
+
+/**
+ * Determines if the current OS is Windows.
+ * @return  bool  True if running on Windows OS, otherwise False.
+ */
+if( !function_exists('is_windows') ):
+function is_windows()
+{
+	return ( DIRECTORY_SEPARATOR == '\\' );
+}
+endif;
+
+
+/**
+ * Get the WinSCP.com absolute path.
+ * @eeturn  string|bool  The path to winscp.com file or false, if not found.
+ */
+if( !function_exists('get_winscp_path') ):
+function get_winscp_path()
+{
+	if( !is_windows() ) return false;
+
+	global $winscp_folder;
+	$check_folders = array();
+
+	if( !empty($winscp_folder) )
+		$check_folders[] = $winscp_folder;
+	$check_folders[] = __DIR__;
+
+	foreach( $check_folders as $folder )
+	{
+		if( file_exists($folder.'\winscp.com') )
+			return $folder;
+	}
+
+	return false;
+}
+endif;
+
+
  * Verify that all config values have a value.
  */
 if( !function_exists('verify_config_values') ):

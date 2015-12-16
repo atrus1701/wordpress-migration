@@ -80,14 +80,50 @@ function copy_wp_folder()
 	global $copy_all, $remote_username, $remote_server, $remote_wp_path, $wp_path;
 	// Copy files from remote location
 	echo2( "\nCopying WordPress files.\n" );
+	$return_value = 0;
 	
-	$exclude_files = '--exclude wp-config.php --exclude=.git --exclude=error_log';
+	$exclude_files = array();
+	$exclude_files[] = 'wp-config.php';
+	$exclude_files[] = 'error_log';
+	$exclude_files[] = '.git';
+	$exclude_files[] = '.git*';
+
 	if( !$copy_all )
 	{
-		$exclude_files .= ' --exclude=wp-content/blogs.dir --exclude=wp-content/uploads';
+		$exclude_files[] = 'wp-content/blogs.dir/';
+		$exclude_files[] = 'wp-content/uploads/';
 	}
-	
-	passthru( "rsync -azP $exclude_files '$remote_username@$remote_server:$remote_wp_path/'  $wp_path" );
+
+	if( !is_windows() )
+	{
+		$exclude_files_command = '';
+		if( count($exclude_files) > 0 )
+			$exclude_files_command = '--exclude='.implode( ' --exclude=', $exclude_files );
+		
+		passthru( "rsync -azP $exclude_files_command '$remote_username@$remote_server:$remote_wp_path/' $wp_path", $return_value );
+	}
+	else
+	{
+		$winscp_path = get_winscp_path();
+		if( !$winscp_path )
+		{
+			script_die(
+				'Unable to find WinSCP.com install.',
+				'Please download and install WinSCP from winscp.net.',
+				'You can install the full version or unzip the portable version into the script folder.' );
+		}
+
+		$exclude_files_command = '';
+		if( count($exclude_files) > 0 )
+			$exclude_files_command = implode( '; ', $exclude_files );
+
+		passthru( "$winscp_path\winscp.com /command \"option batch abort\" \"option confirm off\" \"open scp://$remote_username@$remote_server\" \"synchronize local -filemask=\"\"| $exclude_files_command\"\" $wp_path $remote_wp_path\" \"close\" \"close\"", $return_value );
+	}
+
+	if( $return_value !== 0 )
+	{
+		script_die( 'The copy encountered an error and the script needs to stop.' );
+	}
 }
 endif;
 

@@ -150,15 +150,34 @@ function copy_remote_dump_folder()
 	global $remote_username, $remote_server, $remote_dump_path, $dump_path;
 	$timer = new Timer;
 	$timer->start();
+	$return_value = 0;
 	
 	// Copy dump files from remote location
-	echo "\nCopying dump files.\n";
-	exec( "scp $remote_username@$remote_server:$remote_dump_path/* $dump_path", $output, $return_var );
-	
-	if( $return_var != 0 )
+	echo2( "\nCopying dump files.\n" );
+	if( !is_windows() )
 	{
-		die( "Unable to copy dump files.\n\n" );
+		passthru( "rsync -azP '$remote_username@$remote_server:$remote_dump_path/' $dump_path", $return_value );
 	}
+	else
+	{
+		$winscp_path = get_winscp_path();
+		if( !$winscp_path )
+		{
+			script_die( 
+				'Unable to find WinSCP.com install.', 
+				'Please download and install WinSCP from winscp.net.', 
+				'You can install the full version or unzip the portable version into the script folder.'
+			);
+		}
+
+		passthru( "$winscp_path\winscp.com /command \"option batch abort\" \"option confirm off\" \"option reconnecttime 600\" \"open scp://$remote_username@$remote_server\" \"synchronize local -resumesupport=on $dump_path $remote_dump_path\" \"close\" \"close\"", $return_value );
+	}
+
+	if( $return_value !== 0 )
+	{
+		script_die( 'The copy encountered an error and the script needs to stop.' );
+	}
+
 	echo2( "\nCopying the dump files took {$timer->get_elapsed_time()} seconds.\n\n" );
 }
 endif;
