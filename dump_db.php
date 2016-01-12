@@ -113,6 +113,8 @@ function dump_database_structure()
 		dump_table_structure( $table_name );
 		$current_table_count++;
 	}
+
+	$tables = null;
 }
 endif;
 
@@ -148,6 +150,8 @@ function dump_table_structure( $table_name )
 	
 	file_put_contents( $dump_file, "$drop_table_sql;$delimiter", FILE_APPEND );
 	file_put_contents( $dump_file, "$create_table_sql;$delimiter", FILE_APPEND );
+
+	$create_table = null;
 }
 endif;
 
@@ -190,6 +194,8 @@ function dump_database_data()
 		dump_table_data( $table_name );
 		$current_table_count++;
 	}
+
+	$tables = null;
 }
 endif;
 
@@ -215,6 +221,8 @@ function dump_table_data( $table_name )
 	{
 		script_die( 'Unable to retrieve the row count for table "'.$table_name.'".', $e->getMessage() );
 	}
+
+	$rc_query = null;
 	
 	// Get table data
 	for( $i = 0; $i < $row_count; $i += $select_limit )
@@ -235,6 +243,8 @@ function dump_table_data( $table_name )
 			$insert_statement = create_insert_statement( $table_name, $d );
 			file_put_contents( $dump_file, "$insert_statement;$delimiter", FILE_APPEND );
 		}
+
+		$data = null;
 	}
 }
 endif;
