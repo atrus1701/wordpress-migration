@@ -261,7 +261,7 @@ function create_insert_statement( $table_name, &$row )
 			$v = 'true';
 		elseif( false === $value )
 			$v = 'false';
-		elseif( is_numeric($value) )
+		elseif( is_numeric_column($table_name, $key) )
 			$v = $value;
 		else
 			$v = $db_connection->quote( $value );

@@ -13,6 +13,7 @@ ini_set('memory_limit', '512M');
 
 // Database connection object.
 $db_connection = null;
+$is_connection = null;
 
 // A list of non-fatal errors that have occured.
 $errors = array();
@@ -144,7 +145,7 @@ endif;
 if( !function_exists('sql_connect') ):
 function sql_connect()
 {
-	global $db_connection, $dbhost, $dbname, $dbusername, $dbpassword;
+	global $db_connection, $is_connection, $dbhost, $dbname, $dbusername, $dbpassword;
 	if( $db_connection ) return;
 	
 	// Create connection
@@ -153,10 +154,14 @@ function sql_connect()
 	{
 		$db_connection = new PDO( "mysql:host=$dbhost;dbname=$dbname;charset=utf8", $dbusername, $dbpassword );
 		$db_connection->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
+
+		$is_connection = new PDO( "mysql:host=$dbhost;dbname=information_schema;charset=utf8", $dbusername, $dbpassword );
+		$is_connection->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
 	}
 	catch( PDOException $e )
 	{
 		$db_connection = null;
+		$is_connection = null;
 		script_die( 'Unable to connect to the database.', $e->getMessage() );
 	}
 }
@@ -169,8 +174,9 @@ endif;
 if( !function_exists('sql_close') ):
 function sql_close()
 {
-	global $db_connection;
+	global $db_connection, $is_connection;
 	$db_connection = null;
+	$is_connection = null;
 }
 endif;
 
@@ -454,6 +460,37 @@ function get_time_string( $seconds )
 	}
 
 	return implode( ' ', $times );
+}
+endif;
+
+
+if( !function_exists('is_numeric_column') ):
+function is_numeric_column( $table_name, $column_name )
+{
+	global $is_connection, $dbname;
+
+	$select_sql = "SELECT 1 FROM `columns` WHERE TABLE_SCHEMA = '{$dbname}' AND TABLE_NAME = '{$table_name}' AND COLUMN_NAME = '{$column_name}' AND NUMERic_PRECISION IS NOT NULL;";
+	
+	// Update table row
+	try
+	{
+		$data = $is_connection->query( $select_sql );
+	}
+	catch( PDOException $e )
+	{
+		echo2( $e->getMessage() );
+		add_error(
+			$table_name,
+			$e->getMessage(),
+			"\n".print_r($select_sql, true)
+		);
+		return false;
+	}
+
+	$is_numeric_column = ( $data->rowCount() > 0 );
+	$data = null;
+
+	return $is_numeric_column;
 }
 endif;
 

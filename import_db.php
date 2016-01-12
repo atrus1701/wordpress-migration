@@ -744,7 +744,7 @@ function update_row( $table_name, $primary_key, $row )
 			$v = 'true';
 		elseif( false === $value )
 			$v = 'false';
-		elseif( is_numeric($value) )
+		elseif( is_numeric_column($table_name, $column_name) )
 			$v = $value;
 		else
 			$v = $db_connection->quote( $value );
@@ -752,7 +752,7 @@ function update_row( $table_name, $primary_key, $row )
 		$fields[] = "`$column_name`=$v";
 	}
 	
-	if( !is_numeric($primary_value) )
+	if( !is_numeric_column($table_name, $primary_key) )
 		$primary_value = $db_connection->quote( $primary_value );
 	
 	$primary_field = "`$primary_key`=$primary_value";
